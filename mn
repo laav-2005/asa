@@ -1,0 +1,46 @@
+alpha_value = 0.1
+
+snbf = 1/4*(1 + alpha_value)**2
+
+print(f"Transcritical bifurcation occurs at c = {alpha_value:.2f}")
+print(f"Saddle node bifurcation occurs at c = {snbf:.2f}")
+
+# Sweep a range of c_values
+n_pts = 200
+x = n_pts // 10
+c_values = np.linspace(0, snbf * (1 + x / n_pts), n_pts + x + 1)
+
+# Prepare empty arrays
+y1 = np.full_like(c_values, None)
+y2 = np.full_like(c_values, None)
+y3 = np.full_like(c_values, None)
+
+# Fixed point x1 exists for all c
+y1[:] = x1
+
+# Fixed points x1, x2 exists for c < 𝛼
+c_range_1 = c_values < alpha_value
+for i in np.nonzero(c_range_1)[0]:
+    c_value = c_values[i]
+    y2[i] = x2.evalf(subs={alpha: alpha_value, c: c_value})
+
+# Fixed points x2, x3 exists for 𝛼 <= c < 1/4∗(1+𝛼)**2
+c_range_2 = (c_values >= alpha_value) & (c_values <= snbf)
+for i in np.nonzero(c_range_2)[0]:
+    c_value = c_values[i]
+    y2[i] = x2.evalf(subs={alpha: alpha_value, c: c_value})
+    y3[i] = x3.evalf(subs={alpha: alpha_value, c: c_value})
+
+# Make sure the saddle node point is included exactly        
+i_snbf = np.abs(c_values - snbf).argmin()
+y2[i_snbf] = y3[i_snbf] = (1 - alpha_value) / 2
+
+plt.plot(c_values, y1, label='$x_{*,0}$')
+plt.plot(c_values, y2, label='$x_{*,+}$')
+plt.plot(c_values, y3, label='$x_{*,-}$')
+plt.xlabel('c')
+plt.ylabel('$x_{*}$')
+plt.title('Effect of $c$ on Fixed Points')
+plt.grid()
+plt.legend()
+plt.show()
